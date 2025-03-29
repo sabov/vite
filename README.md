@@ -146,4 +146,4 @@ const RemoteMFE = defineAsyncComponent( 👈
 
 ### So far so good 🎉
 
-Now you are ready to use Module Federation in Vite!
+Now you are ready to use Module Federation in Vite
