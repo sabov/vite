@@ -1,6 +1,5 @@
-import React from 'react';
-// This import triggers the bug!
 import { Layout, SharedButton } from '@my-org/shared-module';
+import React from 'react';
 
 const RemoteContent: React.FC = () => {
   return (

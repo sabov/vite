@@ -129,7 +129,7 @@ importers:
         version: 6.4.1(@types/node@22.7.4)(jiti@2.4.2)(sass-embedded@1.77.8)(terser@5.31.6)(yaml@2.6.1)
 
   examples/host-runtime-shared-bug/shared-module:
-    devDependencies:
+    dependencies:
       react:
         specifier: ^18.0.0
         version: 18.3.1
