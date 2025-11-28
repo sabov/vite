@@ -13,17 +13,9 @@ export default defineConfig({
         './App': './src/App.tsx',
       },
       shared: {
-        react: {
-          singleton: true,
-          requiredVersion: '^18.0.0',
-        },
         'react-dom': {
           singleton: true,
           requiredVersion: '^18.0.0',
-        },
-        '@my-org/shared-module': {
-          singleton: true,
-          version: '1.0.0',
         },
       },
       manifest: {
