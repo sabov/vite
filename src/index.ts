@@ -8,6 +8,7 @@ import pluginManifest from './plugins/pluginMFManifest';
 import pluginModuleParseEnd from './plugins/pluginModuleParseEnd';
 import pluginProxyRemoteEntry from './plugins/pluginProxyRemoteEntry';
 import pluginProxyRemotes from './plugins/pluginProxyRemotes';
+import { pluginRemoteDevHMR } from './plugins/pluginRemoteDevHMR';
 import { proxySharedModule } from './plugins/pluginProxySharedModule_preBuild';
 import pluginVarRemoteEntry from './plugins/pluginVarRemoteEntry';
 import aliasToArrayPlugin from './utils/aliasToArrayPlugin';
@@ -106,6 +107,7 @@ function federation(mfUserOptions: ModuleFederationOptions): Plugin[] {
     },
     ...pluginManifest(),
     ...pluginVarRemoteEntry(),
+    pluginRemoteDevHMR(options),
   ];
 }
 

@@ -1,47 +1,26 @@
-import R from 'react';
-import RD from 'react-dom/client';
+import React from 'react';
 
-import App from '@namespace/viteViteRemote';
-import { AgGridDemo } from '@namespace/viteViteRemote/AgGridDemo';
+import RemoteApp from '@namespace/viteViteRemote';
 import App1 from '@namespace/viteViteRemote/App1';
 import { App2 } from '@namespace/viteViteRemote/App2';
-import { EmotionDemo } from '@namespace/viteViteRemote/EmotionDemo';
-import { MuiDemo } from '@namespace/viteViteRemote/MuiDemo';
-import StyledDemo from '@namespace/viteViteRemote/StyledDemo';
-import { ref } from 'vue';
 
-console.log('Share Vue', ref);
-console.log('Share React', R, RD);
-
-export default function () {
+export default function HostApp() {
   return (
     <div style={{ background: 'lightgray' }}>
       <p>
-        Vite React (v {R.version}) app running from Host in{' '}
+        Vite React (v {React.version}) app running from Host in{' '}
         <i> {import.meta.env.DEV ? ' Dev ' : ' prod '} mode </i>
       </p>
       <hr />
 
-      <h2>Vite Remote Default App</h2>
-      <App />
+      <h2>Vite Remote Default App!!</h2>
+      <RemoteApp />
 
       <h2>Vite Remote App1</h2>
       <App1 />
 
       <h2>Vite Remote App2</h2>
       <App2 />
-
-      <h2>Vite Remote AgGridDemo</h2>
-      <AgGridDemo />
-
-      <h3>Vite Remote MuiDemo</h3>
-      <MuiDemo />
-
-      <h2>Styled Components Demo</h2>
-      <StyledDemo />
-
-      <h2>Emotion Styled Components Demo</h2>
-      <EmotionDemo />
 
       <hr />
     </div>
