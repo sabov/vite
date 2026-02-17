@@ -1,7 +1,18 @@
 import { federation } from '@module-federation/vite';
 import react from '@vitejs/plugin-react';
 import { defineConfig } from 'vite';
-import topLevelAwait from 'vite-plugin-top-level-await';
+
+const mfRemoteFullReloadPlugin = {
+  name: 'mf-remote-full-reload',
+  apply: 'serve',
+  handleHotUpdate({ server, file }) {
+    if (file.includes('/src/')) {
+      console.log(`[mf-remote] Source changed: ${file}, sending full-reload`);
+      server.ws.send({ type: 'full-reload', path: '*' });
+      return [];
+    }
+  },
+};
 
 // https://vitejs.dev/config/
 export default defineConfig({
@@ -25,18 +36,13 @@ export default defineConfig({
         './MuiDemo': './src/MuiDemo.jsx',
         './StyledDemo': './src/StyledDemo.jsx',
         './EmotionDemo': './src/EmotionDemo.jsx',
-        '.': './src/App.jsx',
+        './App': './src/App.jsx',
       },
-      dts: false,
       filename: 'remoteEntry-[hash].js',
-      varFilename: 'varRemoteEntry.js', // in cases when host's config requires remote's "type": "var"
       manifest: true,
       shared: {
-        vue: {},
         'react/': {},
-        react: {
-          requiredVersion: '18',
-        },
+        react: { requiredVersion: '18' },
         'react-dom/': {},
         'react-dom': {},
         'styled-components': { singleton: true },
@@ -47,8 +53,7 @@ export default defineConfig({
         '@mui/material': {},
       },
     }),
-    // If you set build.target: "chrome89", you can remove this plugin
-    false && topLevelAwait(),
+    mfRemoteFullReloadPlugin,
   ],
   build: {
     target: 'chrome89',
