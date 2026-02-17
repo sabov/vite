@@ -4,11 +4,14 @@ import addEntry from './plugins/pluginAddEntry';
 import { checkAliasConflicts } from './plugins/pluginCheckAliasConflicts';
 import { PluginDevProxyModuleTopLevelAwait } from './plugins/pluginDevProxyModuleTopLevelAwait';
 import pluginDts from './plugins/pluginDts';
+import { pluginExposeHMR } from './plugins/pluginExposeHMR';
 import pluginManifest from './plugins/pluginMFManifest';
 import pluginModuleParseEnd from './plugins/pluginModuleParseEnd';
 import pluginProxyRemoteEntry from './plugins/pluginProxyRemoteEntry';
 import pluginProxyRemotes from './plugins/pluginProxyRemotes';
+import { pluginRemoteDevHMR } from './plugins/pluginRemoteDevHMR';
 import { proxySharedModule } from './plugins/pluginProxySharedModule_preBuild';
+import { runtimeFederationDev } from './plugins/pluginRuntimeFederationDev';
 import pluginVarRemoteEntry from './plugins/pluginVarRemoteEntry';
 import aliasToArrayPlugin from './utils/aliasToArrayPlugin';
 import {
@@ -106,7 +109,9 @@ function federation(mfUserOptions: ModuleFederationOptions): Plugin[] {
     },
     ...pluginManifest(),
     ...pluginVarRemoteEntry(),
+    pluginExposeHMR(options),
+    pluginRemoteDevHMR(options),
   ];
 }
 
-export { federation };
+export { federation, runtimeFederationDev };
