@@ -2,18 +2,6 @@ import { federation } from '@module-federation/vite';
 import react from '@vitejs/plugin-react';
 import { defineConfig } from 'vite';
 
-const mfRemoteFullReloadPlugin = {
-  name: 'mf-remote-full-reload',
-  apply: 'serve',
-  handleHotUpdate({ server, file }) {
-    if (file.includes('/src/')) {
-      console.log(`[mf-remote] Source changed: ${file}, sending full-reload`);
-      server.ws.send({ type: 'full-reload', path: '*' });
-      return [];
-    }
-  },
-};
-
 // https://vitejs.dev/config/
 export default defineConfig({
   server: {
@@ -53,7 +41,6 @@ export default defineConfig({
         '@mui/material': {},
       },
     }),
-    mfRemoteFullReloadPlugin,
   ],
   build: {
     target: 'chrome89',

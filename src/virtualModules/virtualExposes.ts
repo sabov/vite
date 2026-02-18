@@ -27,5 +27,12 @@ export function generateExposes() {
       })
       .join(',')}
   }
+
+  if (import.meta.hot) {
+    import.meta.hot.on('mf:module-updated', (data) => {
+      globalThis.__mf_expose_ts__ = Date.now();
+      window.dispatchEvent(new CustomEvent('mf:module-updated', { detail: data }));
+    });
+  }
   `;
 }
