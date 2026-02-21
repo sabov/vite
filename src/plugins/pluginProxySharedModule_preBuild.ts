@@ -86,8 +86,18 @@ export function proxySharedModule(options: {
                   async customResolver(source: string, importer: string) {
                     const module = assertModuleFound(PREBUILD_TAG, source) as VirtualModule;
                     const pkgName = module.name;
+                    // Resolve to the actual package file path using require.resolve,
+                    // bypassing Vite's shared alias which would redirect to the
+                    // loadShare proxy and create a circular dependency.
+                    let resolveTarget = pkgName;
+                    try {
+                      const root = (_config as any).root || process.cwd();
+                      resolveTarget = require.resolve(pkgName, { paths: [root] });
+                    } catch {
+                      // Fall back to bare specifier if require.resolve fails
+                    }
                     const result = await (this as any)
-                      .resolve(pkgName, importer)
+                      .resolve(resolveTarget, importer)
                       .then((item: any) => item.id);
                     if (!result.includes(_config.cacheDir)) {
                       // save pre-bunding module id
