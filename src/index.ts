@@ -22,10 +22,12 @@ import {
   getHostAutoInitImportId,
   getHostAutoInitPath,
   getLocalSharedImportMapPath,
+  getPreBuildLibImportId,
   initVirtualModules,
   LOAD_REMOTE_TAG,
   LOAD_SHARE_TAG,
   REMOTE_ENTRY_ID,
+  virtualRuntimeInitStatus,
 } from './virtualModules';
 import { VIRTUAL_EXPOSES } from './virtualModules/virtualExposes';
 
@@ -143,6 +145,95 @@ function federation(mfUserOptions: ModuleFederationOptions): Plugin[] {
         config.optimizeDeps?.include?.push(virtualDir);
         config.optimizeDeps?.needsInterop?.push(virtualDir);
         config.optimizeDeps?.needsInterop?.push(getLocalSharedImportMapPath());
+
+        // Pre-include the runtimeInit virtual module to prevent Vite from
+        // discovering it at runtime, which triggers dep re-optimization and
+        // causes a double full-page reload on cold start.
+        // See: https://github.com/module-federation/vite/issues/424
+        const runtimeInitId = virtualRuntimeInitStatus.getImportId();
+        config.optimizeDeps?.include?.push(runtimeInitId);
+        config.optimizeDeps?.needsInterop?.push(runtimeInitId);
+
+        // Pre-include all shared modules so Vite's dep optimizer records them
+        // in the optimization metadata during the initial scan. Without this,
+        // the loadShare proxy prevents Vite from discovering shared packages'
+        // transitive dependencies, causing runtime dep discovery and a full
+        // page reload on cold start.
+        // The loadShare proxy's live import() hint (not wrapped in an arrow
+        // function) lets esbuild naturally discover __prebuild__ modules as
+        // transitive dependencies, so they don't need explicit enumeration.
+        // See: https://github.com/module-federation/vite/issues/424
+        for (const key of Object.keys(shared)) {
+          if (key.endsWith('/')) {
+            const pkgName = key.slice(0, -1);
+            // Always include the base package name
+            config.optimizeDeps?.include?.push(pkgName);
+            // For packages with an `exports` field, also use a glob pattern
+            // so Vite enumerates all exported subpaths (e.g. react/jsx-runtime)
+            // into the optimization metadata. Without `exports`, Vite falls
+            // back to a filesystem glob that can include .d.ts and other
+            // non-JS files, crashing esbuild.
+            try {
+              const pkgJson = JSON.parse(
+                readFileSync(require.resolve(`${pkgName}/package.json`), 'utf-8')
+              );
+              if (
+                pkgJson.exports &&
+                typeof pkgJson.exports === 'object' &&
+                !Array.isArray(pkgJson.exports)
+              ) {
+                config.optimizeDeps?.include?.push(`${pkgName}/**`);
+              }
+            } catch {
+              // package.json not accessible — base name already included above
+            }
+          } else {
+            config.optimizeDeps?.include?.push(key);
+          }
+        }
+
+        // Pre-include __prebuild__ virtual modules for all shared packages.
+        // The localSharedImportMap dynamically imports __prebuild__ modules
+        // to load actual package code (bypassing the loadShare proxy).
+        // Without pre-including them, they are discovered at runtime via
+        // registerMissingImport, triggering dep re-optimization and page reload.
+        // See: https://github.com/module-federation/vite/issues/424
+        for (const key of Object.keys(shared)) {
+          const prebuildNames: string[] = [];
+
+          if (key.endsWith('/')) {
+            const pkgName = key.slice(0, -1);
+            prebuildNames.push(pkgName);
+            // Enumerate subpath exports so their __prebuild__ modules are
+            // also pre-included (e.g. react/jsx-runtime, react/jsx-dev-runtime)
+            try {
+              const pkgJson = JSON.parse(
+                readFileSync(require.resolve(`${pkgName}/package.json`), 'utf-8')
+              );
+              if (
+                pkgJson.exports &&
+                typeof pkgJson.exports === 'object' &&
+                !Array.isArray(pkgJson.exports)
+              ) {
+                for (const exportKey of Object.keys(pkgJson.exports)) {
+                  if (exportKey === '.' || exportKey === './package.json') continue;
+                  if (!exportKey.startsWith('./')) continue;
+                  if (exportKey.includes('*')) continue;
+                  prebuildNames.push(`${pkgName}/${exportKey.slice(2)}`);
+                }
+              }
+            } catch {
+              // package.json not accessible
+            }
+          } else {
+            prebuildNames.push(key);
+          }
+
+          for (const name of prebuildNames) {
+            const prebuildId = getPreBuildLibImportId(name);
+            config.optimizeDeps?.include?.push(prebuildId);
+          }
+        }
 
         // Resolve target: explicit option > SSR detection > 'web'
         const resolvedTarget = options.target ?? (config.build?.ssr ? 'node' : 'web');

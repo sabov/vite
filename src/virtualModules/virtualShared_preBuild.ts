@@ -47,7 +47,7 @@ export function writeLoadShareModule(pkg: string, shareItem: ShareItem, command:
   const exportLine = isBuild ? 'export default exportModule' : 'module.exports = exportModule';
 
   loadShareCacheMap[pkg].writeSync(`
-    ;() => import(${JSON.stringify(getPreBuildLibImportId(pkg))}).catch(() => {});
+    ${command !== 'build' ? `import(${JSON.stringify(getPreBuildLibImportId(pkg))}).catch(() => {});` : ''}
     ${command !== 'build' ? `;() => import(${JSON.stringify(pkg)}).catch(() => {});` : ''}
     ${importLine}
     const res = initPromise.then(runtime => runtime.loadShare(${JSON.stringify(pkg)}, {
